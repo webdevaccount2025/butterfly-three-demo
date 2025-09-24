@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Three.js WebGL Demo">
+    <title>Three.js 3D Model Viewer</title>
+    
+     <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .d-flex{
+            display: flex;
+        }
+        .justify-content-center{
+            justify-content: center;
+        }
+        .align-items-center{
+            align-items: center;
+        }
+        .flex-column{
+            flex-direction: column;
+        }
+        .flex-row{
+            flex-direction: row;
+        }
+        .flex-wrap{
+            flex-wrap: wrap;
+        }
+        .flex-nowrap{
+            flex-wrap: nowrap;
+        }
+
+        .flex-grow-1{
+            flex-grow: 1;
+        }
+        .flex-grow-2{
+            flex-grow: 2;
+        }
+        .flex-grow-3{   
+            flex-grow: 3;
+        }
+        .flex-grow-4{
+            flex-grow: 4;
+        }
+        .flex-grow-5{
+            flex-grow: 5;
+        }
+        .mx-auto{
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .mx-2{
+            margin-left: 2rem;
+            margin-right: 2rem;
+        }
+        .mx-4{
+            margin-left: 4rem;
+            margin-right: 4rem;
+        }
+        .mx-6{
+            margin-left: 6rem;
+            margin-right: 6rem;
+        }
+        .px-2{
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+        .px-4{
+            padding-left: 4rem;
+            padding-right: 4rem;
+        }
+        .px-6{
+            padding-left: 6rem;
+            padding-right: 6rem;
+        }
+     </style>
+</head>
+
+<body>
+    <div id="container">
+        <canvas id="canvas"></canvas>
+        <div id="info">
+            <h1>Three.js Demo</h1>
+            <p>WebGL 3D Graphics</p>
+            <div id="loading">Loading model...</div>
+
+        </div>
+    </div>
+   <!-- Use ES6 modules - this is the modern way -->
+   <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.166.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.166.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas') });
+
+        // Set renderer size and add to container
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x222222);
+
+        // Enable shadows for better lighting
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        // Position camera
+        camera.position.set(0, 0, 5);
+
+        // Add camera controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.enableZoom = true;
+        controls.enablePan = true;
+        controls.enableRotate = true;
+        controls.minDistance = 1;
+        controls.maxDistance = 20;
+        controls.maxPolarAngle = Math.PI;
+
+        // Lighting objects
+        let lights = {};
+
+        // Better lighting setup - mix of uniform and directional
+        function setupLighting() {
+            // Very strong ambient light for base illumination
+            lights.ambient = new THREE.AmbientLight(0xffffff, 1.2);
+            scene.add(lights.ambient);
+
+            // Hemisphere light for subtle color variation
+            lights.hemisphere = new THREE.HemisphereLight(0xffffff, 0x888888, 0.8);
+            scene.add(lights.hemisphere);
+
+            // Main directional light for some definition
+            lights.directional = new THREE.DirectionalLight(0xffffff, 0.8);
+            lights.directional.position.set(2, 2, 2);
+            lights.directional.castShadow = false; // No shadows for uniform look
+            scene.add(lights.directional);
+
+            // Additional directional light from opposite side
+            lights.directional2 = new THREE.DirectionalLight(0xffffff, 0.6);
+            lights.directional2.position.set(-2, 2, -2);
+            lights.directional2.castShadow = false;
+            scene.add(lights.directional2);
+
+            // Point light for additional illumination
+            lights.point = new THREE.PointLight(0xffffff, 0.5, 100);
+            lights.point.position.set(0, 3, 0);
+            lights.point.castShadow = false;
+            scene.add(lights.point);
+        }
+
+        // Setup the lighting
+        setupLighting();
+
+        // GUI setup
+        function setupGUI() {
+            const gui = new dat.GUI();
+            
+            // Lighting folder
+            const lightingFolder = gui.addFolder('Uniform Lighting');
+            
+            // Ambient light controls
+            const ambientFolder = lightingFolder.addFolder('Ambient Light');
+            ambientFolder.addColor(lights.ambient, 'color');
+            ambientFolder.add(lights.ambient, 'intensity', 0, 3).name('Intensity');
+            
+            // Hemisphere light controls
+            const hemisphereFolder = lightingFolder.addFolder('Hemisphere Light');
+            hemisphereFolder.addColor(lights.hemisphere, 'color').name('Sky Color');
+            hemisphereFolder.addColor(lights.hemisphere, 'groundColor').name('Ground Color');
+            hemisphereFolder.add(lights.hemisphere, 'intensity', 0, 2).name('Intensity');
+            
+            // Directional lights
+            const directionalFolder = lightingFolder.addFolder('Directional Lights');
+            directionalFolder.add(lights.directional, 'intensity', 0, 2).name('Main Light Intensity');
+            directionalFolder.add(lights.directional2, 'intensity', 0, 2).name('Fill Light Intensity');
+            
+            // Point light
+            const pointFolder = lightingFolder.addFolder('Point Light');
+            pointFolder.add(lights.point, 'intensity', 0, 2).name('Intensity');
+            pointFolder.add(lights.point.position, 'x', -10, 10).name('Position X');
+            pointFolder.add(lights.point.position, 'y', -10, 10).name('Position Y');
+            pointFolder.add(lights.point.position, 'z', -10, 10).name('Position Z');
+            
+            // Overall lighting controls
+            const overallFolder = lightingFolder.addFolder('Overall Settings');
+            const lightingSettings = {
+                overallIntensity: 1.0
+            };
+            
+            overallFolder.add(lightingSettings, 'overallIntensity', 0, 2).name('Overall Intensity').onChange((value) => {
+                lights.ambient.intensity = 1.2 * value;
+                lights.hemisphere.intensity = 0.8 * value;
+                lights.directional.intensity = 0.8 * value;
+                lights.directional2.intensity = 0.6 * value;
+                lights.point.intensity = 0.5 * value;
+            });
+            
+            // Renderer controls
+            const rendererFolder = gui.addFolder('Renderer');
+            const backgroundColor = { color: 0x222222 };
+            rendererFolder.addColor(backgroundColor, 'color').name('Background Color').onChange((value) => {
+                renderer.setClearColor(value);
+            });
+            
+            // Camera controls
+            const cameraFolder = gui.addFolder('Camera');
+            cameraFolder.add(camera.position, 'x', -20, 20).name('Position X');
+            cameraFolder.add(camera.position, 'y', -20, 20).name('Position Y');
+            cameraFolder.add(camera.position, 'z', -20, 20).name('Position Z');
+            
+            // Open folders
+            lightingFolder.open();
+            ambientFolder.open();
+        }
+
+        // Setup GUI
+        setupGUI();
+
+        // Load GLB model
+        const loader = new GLTFLoader();
+        const loadingElement = document.getElementById('loading');
+
+        loader.load(
+            'glb/textured_mesh.glb',
+            function (gltf) {
+                const model = gltf.scene;
+                scene.add(model);
+                loadingElement.textContent = 'Model loaded!';
+                
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                model.position.sub(center);
+                model.scale.setScalar(1);
+                
+                // Ensure materials are properly lit
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = false;
+                        child.receiveShadow = false;
+                        
+                        // Ensure material is visible
+                        if (child.material) {
+                            child.material.needsUpdate = true;
+                            
+                            // If material is too dark, increase emissive or adjust
+                            if (child.material.emissive) {
+                                child.material.emissive.multiplyScalar(0.1); // Slight emissive glow
+                            }
+                        }
+                    }
+                });
+                
+                controls.target.copy(center);
+                controls.update();
+                
+                console.log('GLB model loaded:', gltf);
+            },
+            function (progress) {
+                const percent = Math.round((progress.loaded / progress.total) * 100);
+                loadingElement.textContent = `Loading model... ${percent}%`;
+            },
+            function (error) {
+                console.error('Error loading GLB model:', error);
+                loadingElement.textContent = 'Error loading model';
+            }
+        );
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Start animation
+        animate();
+    </script>
+
+</body>
+</html>
