@@ -98,7 +98,7 @@
         }
     }
     </script>
-    <!--- <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script> 
 
     <script type="module">
         import * as THREE from 'three';
@@ -250,28 +250,30 @@
         // Better balanced lighting setup
         function setupLighting() {
             // Moderate ambient light - just for base illumination
-            lights.ambient = new THREE.AmbientLight(0xffffff, 0.4);
+            lights.ambient = new THREE.AmbientLight(0xffffff, 100);
             scene.add(lights.ambient);
 
             // Hemisphere light - subtle color variation
-            lights.hemisphere = new THREE.HemisphereLight(0x87CEEB, 0x8B4513, 1);
+            lights.hemisphere = new THREE.HemisphereLight(0x87CEEB, 0x8B4513, 1000);
+            lights.hemisphere.position.set(0, 3, 3);
+
             scene.add(lights.hemisphere);
 
             // Main directional light - primary illumination
             lights.directional = new THREE.DirectionalLight(0xffffff, 15);
-            lights.directional.position.set(3, 3, 3);
-            lights.directional.castShadow = false;
+            lights.directional.position.set(0, 3, 3);
+            lights.directional.castShadow = true;
             scene.add(lights.directional);
 
             // Fill directional light - from opposite side
             lights.directional2 = new THREE.DirectionalLight(0xffffff, 15);
-            lights.directional2.position.set(-3, 2, -3);
+            lights.directional2.position.set(0, 3, -3);
             lights.directional2.castShadow = false;
             scene.add(lights.directional2);
 
             // Third directional light - from above
-            lights.directional3 = new THREE.DirectionalLight(0xffffff, 0.4);
-            lights.directional3.position.set(0, 5, 0);
+            lights.directional3 = new THREE.DirectionalLight(0xffffff, 8);
+            lights.directional3.position.set(10, 5, 0);
             lights.directional3.castShadow = false;
             scene.add(lights.directional3);
 
@@ -282,8 +284,8 @@
             scene.add(lights.point);
 
             // Additional point lights for even coverage
-            lights.point2 = new THREE.PointLight(0xffffff, 0.6, 30);
-            lights.point2.position.set(4, 0, 0);
+            lights.point2 = new THREE.PointLight(0xffff00, 10, 300);
+            lights.point2.position.set(4, 10, 0);
             lights.point2.castShadow = false;
             scene.add(lights.point2);
 
@@ -365,6 +367,17 @@
             directionalFolder.add(lights.directional, 'intensity', 0, 20).name('Main Light');
             directionalFolder.add(lights.directional2, 'intensity', 0, 20).name('Fill Light');
             directionalFolder.add(lights.directional3, 'intensity', 0, 20).name('Top Light');
+            directionalFolder.add(lights.directional.position, 'x', -100, 100).name('x');
+            directionalFolder.add(lights.directional.position, 'y', -100, 100).name('y');
+            directionalFolder.add(lights.directional.position, 'z', -100, 100).name('z');
+            directionalFolder.add(lights.directional2, 'intensity', 0, 20).name('Fill Light');
+            directionalFolder.add(lights.directional2.position, 'x', -100, 100).name('x');
+            directionalFolder.add(lights.directional2.position, 'y', -100, 100).name('y');
+            directionalFolder.add(lights.directional2.position, 'z', -100, 100).name('z');
+            directionalFolder.add(lights.directional3, 'intensity', 0, 20).name('Top Light');
+            directionalFolder.add(lights.directional3.position, 'x', -100, 100).name('x');
+            directionalFolder.add(lights.directional3.position, 'y', -100, 100).name('y');
+            directionalFolder.add(lights.directional3.position, 'z', -100, 100).name('z');
             
             // Point lights
             const pointFolder = lightingFolder.addFolder('Point Lights');
@@ -445,7 +458,7 @@
         }
 
         // Setup GUI
-        //setupGUI();
+        setupGUI();
 
         // Load GLB model
         const loader = new GLTFLoader();
