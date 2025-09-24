@@ -187,18 +187,16 @@
             modelInstances = [];
 
             // Create multiple instances of the model
-            for (let i = 0; i < 200; i++) {
+            for (let i = 0; i < 500; i++) {
                 const instance = originalModel.clone();
                 
-                // Random position around the main model with better distribution
-                const minDistance = 50; // Minimum distance from center
-                const maxDistance = 300; // Maximum distance from center
-                const radius = minDistance + Math.random() * (maxDistance - minDistance);
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.random() * Math.PI * 0.5;
+        // Generate random position
+            const radius = 30 + Math.random() * 150; // Start further away
+            const theta = Math.random() * Math.PI * 10;
+            const phi = Math.random() * Math.PI * 0.5;
 
                 instance.position.set(
-                    radius * Math.sin(phi) * Math.cos(theta),
+                    radius * Math.cos(theta),
                     Math.random() * 150 - 10,
                     radius * Math.sin(phi) * Math.sin(theta)
                 );
@@ -467,7 +465,7 @@
                 const box = new THREE.Box3().setFromObject(model);
                 const center = box.getCenter(new THREE.Vector3());
                 model.position.sub(center);
-                model.scale.setScalar(2); // Keep your preferred scale
+                model.scale.setScalar(2.7); // Keep your preferred scale
                 
                 // Ensure materials are properly lit
                 model.traverse((child) => {
