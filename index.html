@@ -120,7 +120,7 @@
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
         // Position camera
-        camera.position.set(0, 0, 5);
+        camera.position.set(0, 0, 6);
 
         // Add camera controls
         const controls = new OrbitControls(camera, renderer.domElement);
@@ -254,17 +254,17 @@
             scene.add(lights.ambient);
 
             // Hemisphere light - subtle color variation
-            lights.hemisphere = new THREE.HemisphereLight(0x87CEEB, 0x8B4513, 0.6);
+            lights.hemisphere = new THREE.HemisphereLight(0x87CEEB, 0x8B4513, 1);
             scene.add(lights.hemisphere);
 
             // Main directional light - primary illumination
-            lights.directional = new THREE.DirectionalLight(0xffffff, 10);
+            lights.directional = new THREE.DirectionalLight(0xffffff, 15);
             lights.directional.position.set(3, 3, 3);
             lights.directional.castShadow = false;
             scene.add(lights.directional);
 
             // Fill directional light - from opposite side
-            lights.directional2 = new THREE.DirectionalLight(0xffffff, 10);
+            lights.directional2 = new THREE.DirectionalLight(0xffffff, 15);
             lights.directional2.position.set(-3, 2, -3);
             lights.directional2.castShadow = false;
             scene.add(lights.directional2);
@@ -287,7 +287,7 @@
             lights.point2.castShadow = false;
             scene.add(lights.point2);
 
-            lights.point3 = new THREE.PointLight(0xffffff, 0.6, 30);
+            lights.point3 = new THREE.PointLight(0xffffff, 0.6, 130);
             lights.point3.position.set(-4, 0, 0);
             lights.point3.castShadow = false;
             scene.add(lights.point3);
@@ -301,7 +301,7 @@
             lights.point5.position.set(10, 0, 0);
             scene.add(lights.point5);
 
-            lights.point6 = new THREE.PointLight(0xffffff, 1, 100);
+            lights.point6 = new THREE.PointLight(0xffffff, 1, 200);
             lights.point6.position.set(-10, 0, 0);
             scene.add(lights.point6);
         }
