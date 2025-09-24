@@ -101,7 +101,6 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
 
-
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -114,7 +113,7 @@
 
         // Set renderer size and add to container
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0x222222);
+        renderer.setClearColor(0xffffff); // Changed to white background
 
         // Enable shadows for better lighting
         renderer.shadowMap.enabled = true;
@@ -137,33 +136,50 @@
         // Lighting objects
         let lights = {};
 
-        // Better lighting setup - mix of uniform and directional
+        // Better balanced lighting setup
         function setupLighting() {
-            // Very strong ambient light for base illumination
-            lights.ambient = new THREE.AmbientLight(0xffffff, 1.2);
+            // Moderate ambient light - just for base illumination
+            lights.ambient = new THREE.AmbientLight(0xffffff, 0.3);
             scene.add(lights.ambient);
 
-            // Hemisphere light for subtle color variation
-            lights.hemisphere = new THREE.HemisphereLight(0xffffff, 0x888888, 0.8);
+            // Hemisphere light - subtle color variation
+            lights.hemisphere = new THREE.HemisphereLight(0x87CEEB, 0x8B4513, 10);
             scene.add(lights.hemisphere);
 
-            // Main directional light for some definition
-            lights.directional = new THREE.DirectionalLight(0xffffff, 0.8);
-            lights.directional.position.set(2, 2, 2);
-            lights.directional.castShadow = false; // No shadows for uniform look
+            // Main directional light - primary illumination
+            lights.directional = new THREE.DirectionalLight(0xffffff, 10);
+            lights.directional.position.set(3, 3, 3);
+            lights.directional.castShadow = true;
             scene.add(lights.directional);
 
-            // Additional directional light from opposite side
-            lights.directional2 = new THREE.DirectionalLight(0xffffff, 0.6);
-            lights.directional2.position.set(-2, 2, -2);
+            // Fill directional light - from opposite side
+            lights.directional2 = new THREE.DirectionalLight(0xffffff, 10);
+            lights.directional2.position.set(-3, 2, -3);
             lights.directional2.castShadow = false;
             scene.add(lights.directional2);
 
-            // Point light for additional illumination
-            lights.point = new THREE.PointLight(0xffffff, 0.5, 100);
-            lights.point.position.set(0, 3, 0);
-            lights.point.castShadow = false;
+            // Third directional light - from above
+            lights.directional3 = new THREE.DirectionalLight(0xffffff, 0.4);
+            lights.directional3.position.set(0, 5, 0);
+            lights.directional3.castShadow = false;
+            scene.add(lights.directional3);
+
+            // Strong point light - much more powerful
+            lights.point = new THREE.PointLight(0xffffff, 1.0, 50);
+            lights.point.position.set(0, 0, 30);
+            lights.point.castShadow = true;
             scene.add(lights.point);
+
+            // Additional point lights for even coverage
+            lights.point2 = new THREE.PointLight(0xffffff, 0.6, 30);
+            lights.point2.position.set(4, 0, 0);
+            lights.point2.castShadow = true;
+            scene.add(lights.point2);
+
+            lights.point3 = new THREE.PointLight(0xffffff, 0.6, 30);
+            lights.point3.position.set(-4, 0, 0);
+            lights.point3.castShadow = true;
+            scene.add(lights.point3);
         }
 
         // Setup the lighting
@@ -174,48 +190,87 @@
             const gui = new dat.GUI();
             
             // Lighting folder
-            const lightingFolder = gui.addFolder('Uniform Lighting');
+            const lightingFolder = gui.addFolder('Lighting Controls');
             
             // Ambient light controls
             const ambientFolder = lightingFolder.addFolder('Ambient Light');
             ambientFolder.addColor(lights.ambient, 'color');
-            ambientFolder.add(lights.ambient, 'intensity', 0, 3).name('Intensity');
+            ambientFolder.add(lights.ambient, 'intensity', 0, 1).name('Intensity');
             
             // Hemisphere light controls
             const hemisphereFolder = lightingFolder.addFolder('Hemisphere Light');
             hemisphereFolder.addColor(lights.hemisphere, 'color').name('Sky Color');
             hemisphereFolder.addColor(lights.hemisphere, 'groundColor').name('Ground Color');
-            hemisphereFolder.add(lights.hemisphere, 'intensity', 0, 2).name('Intensity');
+            hemisphereFolder.add(lights.hemisphere, 'intensity', 0, 10).name('Intensity');
             
             // Directional lights
             const directionalFolder = lightingFolder.addFolder('Directional Lights');
-            directionalFolder.add(lights.directional, 'intensity', 0, 2).name('Main Light Intensity');
-            directionalFolder.add(lights.directional2, 'intensity', 0, 2).name('Fill Light Intensity');
+            directionalFolder.add(lights.directional, 'intensity', 0, 20).name('Main Light');
+            directionalFolder.add(lights.directional2, 'intensity', 0, 20).name('Fill Light');
+            directionalFolder.add(lights.directional3, 'intensity', 0, 20).name('Top Light');
             
-            // Point light
-            const pointFolder = lightingFolder.addFolder('Point Light');
-            pointFolder.add(lights.point, 'intensity', 0, 2).name('Intensity');
-            pointFolder.add(lights.point.position, 'x', -10, 10).name('Position X');
-            pointFolder.add(lights.point.position, 'y', -10, 10).name('Position Y');
-            pointFolder.add(lights.point.position, 'z', -10, 10).name('Position Z');
+            // Point lights
+            const pointFolder = lightingFolder.addFolder('Point Lights');
+            pointFolder.add(lights.point, 'intensity', 0, 2).name('Center Point');
+            pointFolder.add(lights.point2, 'intensity', 0, 2).name('Right Point');
+            pointFolder.add(lights.point3, 'intensity', 0, 2).name('Left Point');
             
             // Overall lighting controls
             const overallFolder = lightingFolder.addFolder('Overall Settings');
             const lightingSettings = {
-                overallIntensity: 1.0
+                overallIntensity: 1.0,
+                ambientOnly: false,
+                directionalOnly: false,
+                pointOnly: false
             };
             
             overallFolder.add(lightingSettings, 'overallIntensity', 0, 2).name('Overall Intensity').onChange((value) => {
-                lights.ambient.intensity = 1.2 * value;
-                lights.hemisphere.intensity = 0.8 * value;
+                lights.ambient.intensity = 0.3 * value;
+                lights.hemisphere.intensity = 0.4 * value;
                 lights.directional.intensity = 0.8 * value;
                 lights.directional2.intensity = 0.6 * value;
-                lights.point.intensity = 0.5 * value;
+                lights.directional3.intensity = 0.4 * value;
+                lights.point.intensity = 1.0 * value;
+                lights.point2.intensity = 0.6 * value;
+                lights.point3.intensity = 0.6 * value;
+            });
+            
+            overallFolder.add(lightingSettings, 'ambientOnly').name('Ambient Only').onChange((value) => {
+                lights.ambient.visible = value;
+                lights.hemisphere.visible = value;
+                lights.directional.visible = !value;
+                lights.directional2.visible = !value;
+                lights.directional3.visible = !value;
+                lights.point.visible = !value;
+                lights.point2.visible = !value;
+                lights.point3.visible = !value;
+            });
+            
+            overallFolder.add(lightingSettings, 'directionalOnly').name('Directional Only').onChange((value) => {
+                lights.ambient.visible = !value;
+                lights.hemisphere.visible = !value;
+                lights.directional.visible = value;
+                lights.directional2.visible = value;
+                lights.directional3.visible = value;
+                lights.point.visible = !value;
+                lights.point2.visible = !value;
+                lights.point3.visible = !value;
+            });
+            
+            overallFolder.add(lightingSettings, 'pointOnly').name('Point Only').onChange((value) => {
+                lights.ambient.visible = !value;
+                lights.hemisphere.visible = !value;
+                lights.directional.visible = !value;
+                lights.directional2.visible = !value;
+                lights.directional3.visible = !value;
+                lights.point.visible = value;
+                lights.point2.visible = value;
+                lights.point3.visible = value;
             });
             
             // Renderer controls
             const rendererFolder = gui.addFolder('Renderer');
-            const backgroundColor = { color: 0x222222 };
+            const backgroundColor = { color: 0xffffff }; // Changed to white
             rendererFolder.addColor(backgroundColor, 'color').name('Background Color').onChange((value) => {
                 renderer.setClearColor(value);
             });
@@ -228,7 +283,7 @@
             
             // Open folders
             lightingFolder.open();
-            ambientFolder.open();
+            directionalFolder.open();
         }
 
         // Setup GUI
@@ -248,7 +303,7 @@
                 const box = new THREE.Box3().setFromObject(model);
                 const center = box.getCenter(new THREE.Vector3());
                 model.position.sub(center);
-                model.scale.setScalar(1);
+                model.scale.setScalar(2.5);
                 
                 // Ensure materials are properly lit
                 model.traverse((child) => {
@@ -256,14 +311,8 @@
                         child.castShadow = false;
                         child.receiveShadow = false;
                         
-                        // Ensure material is visible
                         if (child.material) {
                             child.material.needsUpdate = true;
-                            
-                            // If material is too dark, increase emissive or adjust
-                            if (child.material.emissive) {
-                                child.material.emissive.multiplyScalar(0.1); // Slight emissive glow
-                            }
                         }
                     }
                 });
@@ -300,6 +349,5 @@
         // Start animation
         animate();
     </script>
-
 </body>
 </html>
