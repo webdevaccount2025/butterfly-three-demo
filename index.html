@@ -111,7 +111,10 @@
         const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas') });
 
         // Set renderer size and add to container
+        const pixelRatio = window.devicePixelRatio || 1;
+
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(pixelRatio, 3)); // Cap at 2x for performanceat 2x for performance
         renderer.setClearColor(0x87CEEB); // Sky blue background
 
         // Enable shadows for better lighting
