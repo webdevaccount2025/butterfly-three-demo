@@ -481,7 +481,7 @@
                 const box = new THREE.Box3().setFromObject(model);
                 const center = box.getCenter(new THREE.Vector3());
                 model.position.sub(center);
-                model.scale.setScalar(2.9); // Keep your preferred scale
+                model.scale.setScalar(3.3); // Keep your preferred scale
                 
                 // Ensure materials are properly lit
                 model.traverse((child) => {
