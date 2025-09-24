@@ -451,14 +451,16 @@
         const loader = new GLTFLoader();
         const loadingElement = document.getElementById('loading');
 
+        let model = null;
         loader.load(
             'glb/textured_mesh.glb',
             function (gltf) {
                 // Store the original model
                 originalModel = gltf.scene.clone();
-                
+   
+
                 // Add the main model to the center
-                const model = gltf.scene;
+                model = gltf.scene;
                 scene.add(model);
                 loadingElement.textContent = 'Model loaded!';
                 
@@ -506,6 +508,13 @@
         function animate() {
             requestAnimationFrame(animate);
             
+            if (model) {
+                model.rotation.y += 0.001; // Adjust speed as needed
+                // You can also add rotation on other axes:
+                // mainModel.rotation.x += 0.002;
+                // mainModel.rotation.z += 0.001;
+            }
+
             // Animate model instances
             animateModelInstances();
             
