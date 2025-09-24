@@ -217,6 +217,7 @@
                     if (child.isMesh) {
                         child.castShadow = false;
                         child.receiveShadow = false;
+                        //child.material.wireframe = true;
                         
                         if (child.material) {
                             child.material.needsUpdate = true;
@@ -260,7 +261,7 @@
             scene.add(lights.hemisphere);
 
             // Main directional light - primary illumination
-            lights.directional = new THREE.DirectionalLight(0xffffff, 8);
+            lights.directional = new THREE.DirectionalLight(0xffffff, 10);
             lights.directional.position.set(0, 3, 3);
             lights.directional.castShadow = true;
             scene.add(lights.directional);
@@ -272,13 +273,13 @@
             scene.add(lights.directional2);
 
             // Third directional light - from above
-            lights.directional3 = new THREE.DirectionalLight(0xffffff, 8);
-            lights.directional3.position.set(10, 5, 0);
+            lights.directional3 = new THREE.DirectionalLight(0xffffff, 10);
+            lights.directional3.position.set(-100, 5, 10);
             lights.directional3.castShadow = false;
             scene.add(lights.directional3);
 
             // Strong point light - much more powerful
-            lights.point = new THREE.PointLight(0xffffff, 1.0, 50);
+            lights.point = new THREE.PointLight(0xffffff, 1.0, 10);
             lights.point.position.set(0, 0, 3);
             lights.point.castShadow = false;
             scene.add(lights.point);
@@ -458,7 +459,7 @@
         }
 
         // Setup GUI
-        setupGUI();
+        //setupGUI();
 
         // Load GLB model
         const loader = new GLTFLoader();
@@ -480,14 +481,15 @@
                 const box = new THREE.Box3().setFromObject(model);
                 const center = box.getCenter(new THREE.Vector3());
                 model.position.sub(center);
-                model.scale.setScalar(3); // Keep your preferred scale
+                model.scale.setScalar(2.9); // Keep your preferred scale
                 
                 // Ensure materials are properly lit
                 model.traverse((child) => {
 
                     if (child.isMesh && child.material) {
                         child.material.emissive = new THREE.Color(0x111111); // Slight glow
-                        child.material.emissiveIntensity = 1;
+                        child.material.emissiveIntensity = 2;
+                        
                     }
                     if (child.isMesh) {
                         child.castShadow = false;
@@ -522,7 +524,7 @@
             requestAnimationFrame(animate);
             
             if (model) {
-                model.rotation.y += 0.001; // Adjust speed as needed
+                model.rotation.y += 0.0001; // Adjust speed as needed
                 // You can also add rotation on other axes:
                 // mainModel.rotation.x += 0.002;
                 // mainModel.rotation.z += 0.001;
