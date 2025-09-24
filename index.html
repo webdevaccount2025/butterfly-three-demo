@@ -113,7 +113,7 @@
 
         // Set renderer size and add to container
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0xffffff); // Changed to white background
+        renderer.setClearColor(0x87CEEB); // Sky blue background
 
         // Enable shadows for better lighting
         renderer.shadowMap.enabled = true;
@@ -133,23 +133,121 @@
         controls.maxDistance = 20;
         controls.maxPolarAngle = Math.PI;
 
+        // Sky and cloud objects
+        let sky, clouds = [];
+
+        // Create sky background
+        function createSky() {
+            // Create a large sphere for the sky
+            const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
+            
+            // Create gradient sky material
+            const skyMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    topColor: { value: new THREE.Color(0xFFFFFF) },
+                    bottomColor: { value: new THREE.Color(0xE0F6FF) },
+                    offset: { value: 33 },
+                    exponent: { value: 1.6 }
+                },
+                vertexShader: `
+                    varying vec3 vWorldPosition;
+                    void main() {
+                        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                        vWorldPosition = worldPosition.xyz;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    uniform vec3 topColor;
+                    uniform vec3 bottomColor;
+                    uniform float offset;
+                    uniform float exponent;
+                    varying vec3 vWorldPosition;
+                    void main() {
+                        float h = normalize(vWorldPosition + offset).y;
+                        gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
+                    }
+                `,
+                side: THREE.BackSide
+            });
+            
+            sky = new THREE.Mesh(skyGeometry, skyMaterial);
+            scene.add(sky);
+        }
+
+        // Create cloud system
+        function createClouds() {
+            const cloudGeometry = new THREE.SphereGeometry(1, 8, 8);
+            const cloudMaterial = new THREE.MeshLambertMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.3
+            });
+
+            // Create multiple clouds at different positions
+            for (let i = 0; i < 20; i++) {
+                const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
+                
+                // Random position in a large sphere around the scene
+                const radius = 50 + Math.random() * 100;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.random() * Math.PI;
+                
+                cloud.position.set(
+                    radius * Math.sin(phi) * Math.cos(theta),
+                    radius * Math.cos(phi) + 20, // Keep clouds above ground
+                    radius * Math.sin(phi) * Math.sin(theta)
+                );
+                
+                // Random scale for variety
+                const scale = 5 + Math.random() * 15;
+                cloud.scale.set(scale, scale * 0.6, scale);
+                
+                // Random rotation
+                cloud.rotation.set(
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI
+                );
+                
+                clouds.push(cloud);
+                scene.add(cloud);
+            }
+        }
+
+        // Animate clouds
+        function animateClouds() {
+            clouds.forEach((cloud, index) => {
+                // Slow rotation
+                cloud.rotation.y += 0.001 * (index % 3 + 1);
+                cloud.rotation.x += 0.0005 * (index % 2 + 1);
+                
+                // Gentle floating motion
+                cloud.position.y += Math.sin(Date.now() * 0.001 + index) * 0.01;
+            });
+        }
+
+        // Create sky and clouds
+        createSky();
+        createClouds();
+
         // Lighting objects
         let lights = {};
 
         // Better balanced lighting setup
         function setupLighting() {
             // Moderate ambient light - just for base illumination
-            lights.ambient = new THREE.AmbientLight(0xffffff, 0.3);
+            lights.ambient = new THREE.AmbientLight(0xffffff, 0.4);
             scene.add(lights.ambient);
 
             // Hemisphere light - subtle color variation
-            lights.hemisphere = new THREE.HemisphereLight(0x87CEEB, 0x8B4513, 10);
+            lights.hemisphere = new THREE.HemisphereLight(0x87CEEB, 0x8B4513, 0.6);
             scene.add(lights.hemisphere);
 
             // Main directional light - primary illumination
             lights.directional = new THREE.DirectionalLight(0xffffff, 10);
             lights.directional.position.set(3, 3, 3);
-            lights.directional.castShadow = true;
+            lights.directional.castShadow = false;
             scene.add(lights.directional);
 
             // Fill directional light - from opposite side
@@ -159,26 +257,26 @@
             scene.add(lights.directional2);
 
             // Third directional light - from above
-            lights.directional3 = new THREE.DirectionalLight(0xffffff, 0.4);
+            lights.directional3 = new THREE.DirectionalLight(0xffffff, 20);
             lights.directional3.position.set(0, 5, 0);
             lights.directional3.castShadow = false;
             scene.add(lights.directional3);
 
             // Strong point light - much more powerful
             lights.point = new THREE.PointLight(0xffffff, 1.0, 50);
-            lights.point.position.set(0, 0, 30);
-            lights.point.castShadow = true;
+            lights.point.position.set(0, 0, 3);
+            lights.point.castShadow = false;
             scene.add(lights.point);
 
             // Additional point lights for even coverage
             lights.point2 = new THREE.PointLight(0xffffff, 0.6, 30);
             lights.point2.position.set(4, 0, 0);
-            lights.point2.castShadow = true;
+            lights.point2.castShadow = false;
             scene.add(lights.point2);
 
             lights.point3 = new THREE.PointLight(0xffffff, 0.6, 30);
             lights.point3.position.set(-4, 0, 0);
-            lights.point3.castShadow = true;
+            lights.point3.castShadow = false;
             scene.add(lights.point3);
         }
 
@@ -188,6 +286,44 @@
         // GUI setup
         function setupGUI() {
             const gui = new dat.GUI();
+            
+            // Sky folder
+            const skyFolder = gui.addFolder('Sky & Clouds');
+            const skySettings = {
+                skyTopColor: 0xFFFFFF,
+                skyBottomColor: 0XEEF5FF,
+                cloudOpacity: 0.1,
+                cloudSpeed: 1.0,
+                cloudCount: 100
+            };
+            
+            skyFolder.addColor(skySettings, 'skyTopColor').name('Sky Top Color').onChange((value) => {
+                sky.material.uniforms.topColor.value.setHex(value);
+            });
+            
+            skyFolder.addColor(skySettings, 'skyBottomColor').name('Sky Bottom Color').onChange((value) => {
+                sky.material.uniforms.bottomColor.value.setHex(value);
+            });
+            
+            skyFolder.add(skySettings, 'cloudOpacity', 0, 1).name('Cloud Opacity').onChange((value) => {
+                clouds.forEach(cloud => {
+                    cloud.material.opacity = value;
+                });
+            });
+            
+            skyFolder.add(skySettings, 'cloudSpeed', 0, 3).name('Cloud Speed').onChange((value) => {
+                // Store speed for animation loop
+                window.cloudSpeed = value;
+            });
+            
+            skyFolder.add(skySettings, 'cloudCount', 5, 50).name('Cloud Count').onChange((value) => {
+                // Remove existing clouds
+                clouds.forEach(cloud => scene.remove(cloud));
+                clouds = [];
+                
+                // Create new clouds
+                createClouds();
+            });
             
             // Lighting folder
             const lightingFolder = gui.addFolder('Lighting Controls');
@@ -201,7 +337,7 @@
             const hemisphereFolder = lightingFolder.addFolder('Hemisphere Light');
             hemisphereFolder.addColor(lights.hemisphere, 'color').name('Sky Color');
             hemisphereFolder.addColor(lights.hemisphere, 'groundColor').name('Ground Color');
-            hemisphereFolder.add(lights.hemisphere, 'intensity', 0, 10).name('Intensity');
+            hemisphereFolder.add(lights.hemisphere, 'intensity', 0, 1).name('Intensity');
             
             // Directional lights
             const directionalFolder = lightingFolder.addFolder('Directional Lights');
@@ -225,8 +361,8 @@
             };
             
             overallFolder.add(lightingSettings, 'overallIntensity', 0, 2).name('Overall Intensity').onChange((value) => {
-                lights.ambient.intensity = 0.3 * value;
-                lights.hemisphere.intensity = 0.4 * value;
+                lights.ambient.intensity = 0.4 * value;
+                lights.hemisphere.intensity = 0.6 * value;
                 lights.directional.intensity = 0.8 * value;
                 lights.directional2.intensity = 0.6 * value;
                 lights.directional3.intensity = 0.4 * value;
@@ -270,7 +406,7 @@
             
             // Renderer controls
             const rendererFolder = gui.addFolder('Renderer');
-            const backgroundColor = { color: 0xffffff }; // Changed to white
+            const backgroundColor = { color: 0x87CEEB };
             rendererFolder.addColor(backgroundColor, 'color').name('Background Color').onChange((value) => {
                 renderer.setClearColor(value);
             });
@@ -282,6 +418,7 @@
             cameraFolder.add(camera.position, 'z', -20, 20).name('Position Z');
             
             // Open folders
+            skyFolder.open();
             lightingFolder.open();
             directionalFolder.open();
         }
@@ -303,7 +440,7 @@
                 const box = new THREE.Box3().setFromObject(model);
                 const center = box.getCenter(new THREE.Vector3());
                 model.position.sub(center);
-                model.scale.setScalar(2.5);
+                model.scale.setScalar(2);
                 
                 // Ensure materials are properly lit
                 model.traverse((child) => {
@@ -335,6 +472,10 @@
         // Animation loop
         function animate() {
             requestAnimationFrame(animate);
+            
+            // Animate clouds
+            animateClouds();
+            
             controls.update();
             renderer.render(scene, camera);
         }
@@ -349,5 +490,6 @@
         // Start animation
         animate();
     </script>
+
 </body>
 </html>
